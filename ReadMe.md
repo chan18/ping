@@ -12,6 +12,60 @@ https://datatracker.ietf.org/doc/html/rfc792
 
 ---
 
+### Information Request or Information Reply Message
+
+Information Request or Information Reply Message
+
+``` bash
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Type      |      Code     |          Checksum             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |           Identifier          |        Sequence Number        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
+   IP Fields:
+
+   Addresses
+
+      The address of the source in a information request message will be
+      the destination of the information reply message.  To form a
+      information reply message, the source and destination addresses
+      are simply reversed, the type code changed to 16, and the checksum
+      recomputed.
+
+   IP Fields:
+
+   Type
+
+      15 for information request message;
+
+      16 for information reply message.
+
+   Code
+
+      0
+
+   Checksum
+
+      The checksum is the 16-bit ones's complement of the one's
+      complement sum of the ICMP message starting with the ICMP Type.
+      For computing the checksum , the checksum field should be zero.
+      This checksum may be replaced in the future.
+
+   Identifier
+
+      If code = 0, an identifier to aid in matching request and replies,
+      may be zero.
+
+   Sequence Number
+
+      If code = 0, a sequence number to aid in matching request and
+      replies, may be zero.
+
+
 ### Message formats
 
 Version
@@ -151,57 +205,3 @@ Destination Address
     15  Information Request
 
     16  Information Reply
-
-
-### Information Request or Information Reply Message
-
-Information Request or Information Reply Message
-
-``` bash
-    0                   1                   2                   3
-    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |     Type      |      Code     |          Checksum             |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |           Identifier          |        Sequence Number        |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-```
-
-   IP Fields:
-
-   Addresses
-
-      The address of the source in a information request message will be
-      the destination of the information reply message.  To form a
-      information reply message, the source and destination addresses
-      are simply reversed, the type code changed to 16, and the checksum
-      recomputed.
-
-   IP Fields:
-
-   Type
-
-      15 for information request message;
-
-      16 for information reply message.
-
-   Code
-
-      0
-
-   Checksum
-
-      The checksum is the 16-bit ones's complement of the one's
-      complement sum of the ICMP message starting with the ICMP Type.
-      For computing the checksum , the checksum field should be zero.
-      This checksum may be replaced in the future.
-
-   Identifier
-
-      If code = 0, an identifier to aid in matching request and replies,
-      may be zero.
-
-   Sequence Number
-
-      If code = 0, a sequence number to aid in matching request and
-      replies, may be zero.
