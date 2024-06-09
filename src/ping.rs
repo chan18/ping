@@ -12,12 +12,11 @@ use std::net::Ipv4Addr;
 use std::time::Duration;
 use std::thread;
 
-
 /*
-    7. applicaiton layer - data
+    7. application layer - data
     6. presentation layer - data
     5. session layer - data
-    4. transport layer - segemtn, datagram
+    4. transport layer - segment, datagram
     3. network layer - packet - ICMP, IP 
     2. data link layer - frame
     1. physical layer - bit, symbol
@@ -40,10 +39,12 @@ pub fn icmp() {
     let destination = Ipv4Addr::new(8, 8, 8, 8);
 
     // echo request buffer
-    let mut echo_request_buffer = [0u8; 16];
+    let echo_request_buffer = vec![0; 16];  
 
+    
     // echo request packet.
-    let mut echo_request_packet = MutableEchoRequestPacket::new(&mut echo_request_buffer).unwrap();
+    //let mut echo_request_packet = MutableEchoRequestPacket::owned(vec![0; 16).unwrap();
+    let mut echo_request_packet = MutableEchoRequestPacket::owned(vec![0; 16]).unwrap();
     
     /*
          set the packet with values
@@ -59,6 +60,8 @@ pub fn icmp() {
     echo_request_packet.set_sequence_number(1);
     echo_request_packet.set_identifier(1);
 
+    //println!("{}", echo_request_buffer);
+
     /*
     Checksum
 
@@ -67,9 +70,12 @@ pub fn icmp() {
       For computing the checksum , the checksum field should be zero.
       If the total length is odd, the received data is padded with one
       octet of zeros for computing the checksum.  This checksum may be
-      replaced in the future.
-       */
-    let checksum = pnet::packet::icmp::checksum(&IcmpPacket::new(&echo_request_buffer).unwrap());
+      replaced in the future.+
+    */
+    let packet: IcmpPacket = IcmpPacket::new( &echo_request_buffer).unwrap();
+    
+    
+    let checksum = pnet::packet::icmp::checksum(&packet);
     echo_request_packet.set_checksum(checksum);
 
     if let Err(e) = tx.send_to(echo_request_packet, IpAddr::V4(destination)) {
@@ -83,8 +89,12 @@ pub fn icmp() {
 
 
     loop {
+        
+        println!("waiting for next packet.");
+
         match iter.next() {
             Ok((packet, addr)) => {
+                println!("recived a packet");
                 if let Some(ipv4_packet) = Ipv4Packet::new(packet.packet()) {
                     if ipv4_packet.get_next_level_protocol() == IpNextHeaderProtocols::Icmp {
                         if let Some(icmp_packet) = IcmpPacket::new(ipv4_packet.payload()) {
