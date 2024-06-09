@@ -20,12 +20,12 @@ fn handle_ethernet_frame(interface: &NetworkInterface, ethernet: &EthernetPacket
         // EtherTypes::Ipv6 => handle_ipv6_packet(interface_name, ethernet),
         // EtherTypes::Arp => handle_arp_packet(interface_name, ethernet),
         _ => println!(
-            "[{}]: Unknown packet: {} > {}; ethertype: {:?} length: {}",
-            interface_name,
-            ethernet.get_source(),
-            ethernet.get_destination(),
-            ethernet.get_ethertype(),
-            ethernet.packet().len()
+            //"[{}]: Unknown packet: {} > {}; ethertype: {:?} length: {}",
+            // interface_name,
+            // ethernet.get_source(),
+            // ethernet.get_destination(),
+            // ethernet.get_ethertype(),
+            // ethernet.packet().len()
         ),
     }
 }
@@ -56,16 +56,16 @@ fn handle_transport_protocol(
             handle_icmp_packet(interface_name, source, destination, packet)
         }
         _ => println!(
-            "[{}]: Unknown {} packet: {} > {}; protocol: {:?} length: {}",
-            interface_name,
-            match source {
-                IpAddr::V4(..) => "IPv4",
-                _ => "IPv6",
-            },
-            source,
-            destination,
-            protocol,
-            packet.len()
+            // "[{}]: Unknown {} packet: {} > {}; protocol: {:?} length: {}",
+            // interface_name,
+            // match source {
+            //     IpAddr::V4(..) => "IPv4",
+            //     _ => "IPv6",
+            // },
+            // source,
+            // destination,
+            // protocol,
+            // packet.len()
         ),
     }
 }
@@ -157,10 +157,10 @@ pub fn start() {
     println!("Channel created successfully. Starting packet capture...");
 
     loop {
-        println!("Waiting for packet...");
+        //println!("Waiting for packet...");
         match receiver_datalinklayer.next() {
             Ok(packet) => {
-                println!("Packet received!");
+                //println!("Packet received!");
                 if let Some(ethernet_packet) = EthernetPacket::new(packet) {
                     handle_ethernet_frame(&interface, &ethernet_packet);
                 } else {
@@ -172,7 +172,7 @@ pub fn start() {
             },
         }
 
-        println!("Capturing..");
+        //println!("Capturing..");
 
         // To avoid tight loop, add a sleep
         std::thread::sleep(Duration::from_millis(100));

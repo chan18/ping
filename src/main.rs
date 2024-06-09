@@ -4,9 +4,9 @@ mod capture;
 
 fn main() {
     
-    capture::start();
+    // capture::start();
 
     // requires admin asccess.
-    // ping::icmp();
+    ping::icmp();
 }
 

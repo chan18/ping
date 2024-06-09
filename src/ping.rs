@@ -1,6 +1,6 @@
 extern crate pnet;
 
-use pnet::packet::icmp::{echo_request, IcmpTypes};
+use pnet::packet::icmp::IcmpTypes;
 use pnet::packet::icmp::echo_request::MutableEchoRequestPacket;
 use pnet::packet::icmp::IcmpPacket;
 use pnet::packet::ip::IpNextHeaderProtocols;
@@ -25,10 +25,17 @@ pub fn icmp() {
 
     // layer - 3  protocol
     // create a transport channel
-    let protocol = Layer3(IpNextHeaderProtocols::Icmp);
+    let protocol = Layer3(IpNextHeaderProtocols::Icmp);   
 
-    let (mut tx, mut rx) = match transport_channel(1024, protocol) {
-        Ok((tx, rx)) => (tx, rx),
+    /* socket text
+        let ip = Ipv4Addr::new(255, 255, 255, 255);
+        let sockaddr = SocketAddr::V4(SocketAddrV4::new(ip, 0));
+        println!("{:?}", ip);
+        println!("{:?}", sockaddr);
+     */
+
+    let (mut transport_sender, mut transport_receiver) = match transport_channel(1024, protocol) {
+        Ok((transport_sender, transport_receiver)) => (transport_sender, transport_receiver),
         Err(e) => {
             eprintln!("An error occurred when creating the transport channel: {}", e);
             return;
@@ -39,29 +46,12 @@ pub fn icmp() {
     let destination = Ipv4Addr::new(8, 8, 8, 8);
 
     // echo request buffer
-    let echo_request_buffer = vec![0; 16];  
+    let mut echo_request_buffer = vec![0; 16];  
+
+    // Create a mutable echo request packet from the buffer
+    let mut echo_request_packet = MutableEchoRequestPacket::new(&mut echo_request_buffer).unwrap();
 
     
-    // echo request packet.
-    //let mut echo_request_packet = MutableEchoRequestPacket::owned(vec![0; 16).unwrap();
-    let mut echo_request_packet = MutableEchoRequestPacket::owned(vec![0; 16]).unwrap();
-    
-    /*
-         set the packet with values
-
-         Type
-            8 for echo message;
-            0 for echo reply message.
-        
-        If code = 0, a sequence number to aid in matching echos and replies, may be zero.
-
-     */
-    echo_request_packet.set_icmp_type(IcmpTypes::EchoRequest);
-    echo_request_packet.set_sequence_number(1);
-    echo_request_packet.set_identifier(1);
-
-    //println!("{}", echo_request_buffer);
-
     /*
     Checksum
 
@@ -72,26 +62,44 @@ pub fn icmp() {
       octet of zeros for computing the checksum.  This checksum may be
       replaced in the future.+
     */
-    let packet: IcmpPacket = IcmpPacket::new( &echo_request_buffer).unwrap();
-    
-    
+    let packet: IcmpPacket = IcmpPacket::new( &echo_request_packet.packet()).unwrap();        
     let checksum = pnet::packet::icmp::checksum(&packet);
+  
+    /*
+         set the packet with values
+
+         Type
+            8 for echo message;
+            0 for echo reply message.
+        
+        If code = 0, a sequence number to aid in matching echos and replies, may be zero.
+
+          0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Type      |      Code     |          Checksum             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |           Identifier          |        Sequence Number        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+     */
+    echo_request_packet.set_icmp_type(IcmpTypes::EchoRequest);
+    echo_request_packet.set_sequence_number(1);
+    echo_request_packet.set_identifier(1);
     echo_request_packet.set_checksum(checksum);
 
-    if let Err(e) = tx.send_to(echo_request_packet, IpAddr::V4(destination)) {
+    println!("{:?}",echo_request_packet);
+
+    if let Err(e) = transport_sender.send_to(echo_request_packet, IpAddr::V4(destination)) {
         eprintln!("Failed to send packet: {}", e);
         return;
     }
 
     println!("Sent ICMP echo request to {}", destination);
 
-    let mut iter = icmp_packet_iter(&mut rx);
-
+    let mut iter = icmp_packet_iter(&mut transport_receiver);
 
     loop {
-        
-        println!("waiting for next packet.");
-
         match iter.next() {
             Ok((packet, addr)) => {
                 println!("recived a packet");
